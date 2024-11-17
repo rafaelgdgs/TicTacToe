@@ -82,7 +82,7 @@ fn pos_to_string(board: &Ttt, pos: usize) -> String {
 }
 
 fn winner_player_based_on_current_player(board: &Ttt) -> String {
-    match board.getPlayer() {
+    match board.get_player() {
         Players::Player1 => "2".to_string(),
         Players::Player2 => "1".to_string(),
     }
