@@ -65,6 +65,10 @@ impl Ttt {
         );
         println!("==========");
     }
+
+    fn getPlayer(&self) -> &Players {
+        &self.player
+    }
 }
 
 fn pos_to_string(board: &Ttt, pos: usize) -> String {
@@ -74,6 +78,13 @@ fn pos_to_string(board: &Ttt, pos: usize) -> String {
             Players::Player1 => "1".to_string(),
             Players::Player2 => "2".to_string(),
         },
+    }
+}
+
+fn winner_player_based_on_current_player(board: &Ttt) -> String {
+    match board.getPlayer() {
+        Players::Player1 => "2".to_string(),
+        Players::Player2 => "1".to_string(),
     }
 }
 
@@ -154,7 +165,10 @@ fn main() {
         //println!("{:?}", board);
         board.show();
     }
-    println!("Someone won");
+    println!(
+        "Player {} won!",
+        winner_player_based_on_current_player(&board)
+    );
     // println!("{:?}", board);
     // board.play(2);
     // board.play(0);
