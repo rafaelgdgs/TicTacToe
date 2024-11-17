@@ -152,12 +152,14 @@ fn main() {
         print!("Next play: ");
         let mut s = String::new();
         let _ = stdout().flush();
-        stdin().read_line(&mut s).expect("Incorrect string");
-        if let Some('\n') = s.chars().next_back() {
-            s.pop();
-        }
-        if let Some('\r') = s.chars().next_back() {
-            s.pop();
+        while s.is_empty() {
+            stdin().read_line(&mut s).expect("Incorrect string");
+            if let Some('\n') = s.chars().next_back() {
+                s.pop();
+            }
+            if let Some('\r') = s.chars().next_back() {
+                s.pop();
+            }
         }
         if !board.play(s.parse::<usize>().unwrap() - 1) {
             println!("Problem playing it. Nothing happened");
