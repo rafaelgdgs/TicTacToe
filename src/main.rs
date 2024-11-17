@@ -66,7 +66,7 @@ impl Ttt {
         println!("==========");
     }
 
-    fn getPlayer(&self) -> &Players {
+    fn get_player(&self) -> &Players {
         &self.player
     }
 }
@@ -169,9 +169,4 @@ fn main() {
         "Player {} won!",
         winner_player_based_on_current_player(&board)
     );
-    // println!("{:?}", board);
-    // board.play(2);
-    // board.play(0);
-    // println!("{:?}", board);
-    // println!("Hello.")
 }
