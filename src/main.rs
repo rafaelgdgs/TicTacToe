@@ -6,8 +6,8 @@ enum Players {
 
 #[derive(Debug, PartialEq, Clone)]
 enum CellPlayer {
-    Player(Players),
-    NoOne,
+    Yes(Players),
+    No,
 }
 
 #[derive(Debug, PartialEq)]
@@ -19,7 +19,7 @@ struct Ttt {
 impl Ttt {
     fn new() -> Self {
         Self {
-            board: vec![CellPlayer::NoOne; 9],
+            board: vec![CellPlayer::No; 9],
             player: Players::Player1,
         }
     }
@@ -28,10 +28,10 @@ impl Ttt {
         if position > 9 {
             return false;
         }
-        if self.board[position] != CellPlayer::NoOne {
+        if self.board[position] != CellPlayer::No {
             return false;
         }
-        self.board[position] = CellPlayer::Player(self.player.to_owned());
+        self.board[position] = CellPlayer::Yes(self.player.to_owned());
         self.player = match self.player {
             Players::Player1 => Players::Player2,
             Players::Player2 => Players::Player1,
@@ -73,8 +73,8 @@ impl Ttt {
 
 fn pos_to_string(board: &Ttt, pos: usize) -> String {
     match board.pos(pos) {
-        CellPlayer::NoOne => "0".to_string(),
-        CellPlayer::Player(x) => match x {
+        CellPlayer::No => "0".to_string(),
+        CellPlayer::Yes(x) => match x {
             Players::Player1 => "1".to_string(),
             Players::Player2 => "2".to_string(),
         },
@@ -89,49 +89,49 @@ fn winner_player_based_on_current_player(board: &Ttt) -> String {
 }
 
 fn is_victory(board: &Ttt) -> bool {
-    if board.pos(0) != &CellPlayer::NoOne
+    if board.pos(0) != &CellPlayer::No
         && board.pos(0) == board.pos(1)
         && board.pos(0) == (board.pos(2))
     {
         return true;
     }
-    if board.pos(3) != &CellPlayer::NoOne
+    if board.pos(3) != &CellPlayer::No
         && board.pos(3) == board.pos(4)
         && board.pos(3) == board.pos(5)
     {
         return true;
     }
-    if board.pos(6) != &CellPlayer::NoOne
+    if board.pos(6) != &CellPlayer::No
         && board.pos(6) == board.pos(7)
         && board.pos(6) == board.pos(8)
     {
         return true;
     }
-    if board.pos(0) != &CellPlayer::NoOne
+    if board.pos(0) != &CellPlayer::No
         && board.pos(0) == board.pos(3)
         && board.pos(0) == board.pos(6)
     {
         return true;
     }
-    if board.pos(1) != &CellPlayer::NoOne
+    if board.pos(1) != &CellPlayer::No
         && board.pos(1) == board.pos(4)
         && board.pos(1) == board.pos(7)
     {
         return true;
     }
-    if board.pos(2) != &CellPlayer::NoOne
+    if board.pos(2) != &CellPlayer::No
         && board.pos(2) == board.pos(5)
         && board.pos(2) == board.pos(8)
     {
         return true;
     }
-    if board.pos(0) != &CellPlayer::NoOne
+    if board.pos(0) != &CellPlayer::No
         && board.pos(0) == board.pos(4)
         && board.pos(0) == board.pos(8)
     {
         return true;
     }
-    if board.pos(2) != &CellPlayer::NoOne
+    if board.pos(2) != &CellPlayer::No
         && board.pos(2) == board.pos(4)
         && board.pos(2) == board.pos(6)
     {
