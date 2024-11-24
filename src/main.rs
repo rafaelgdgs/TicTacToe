@@ -51,7 +51,7 @@ impl Ttt {
     }
 
     fn play(&mut self, position: usize) -> bool {
-        if position > 9 {
+        if position > 8 {
             return false;
         }
         if self.board[position] != CellPlayed::No {
@@ -66,7 +66,7 @@ impl Ttt {
     }
 
     fn pos(&self, position: usize) -> &CellPlayed {
-        if position > 9 {
+        if position > 8 {
             return &CellPlayed::No;
         }
         &self.board[position]
@@ -180,6 +180,14 @@ fn is_victory(board: &Ttt) -> bool {
 
 // fn calculate_win(b: Ttt) -> Vec<Ttt> {}
 
+fn ttt_color_to_macroquad_color(cc: &CellColors) -> macroquad::color::Color {
+    match cc {
+        CellColors::Red => RED,
+        CellColors::Blue => BLUE,
+        CellColors::Green => GREEN,
+    }
+}
+
 fn draw_game(game: &Ttt) {
     let width = 100.0;
     let heigth = 100.0;
@@ -191,62 +199,82 @@ fn draw_game(game: &Ttt) {
             linha += 1f32;
             coluna = 1f32;
         }
-        match item {
-            CellPlayed::No => {
-                draw_rectangle(
-                    coluna * width + 30f32,
-                    linha * heigth + 30f32,
-                    width,
-                    heigth,
-                    RED,
-                );
-            }
-            CellPlayed::Yes(p) => match p {
-                Players::Player1 => {
-                    draw_rectangle(
-                        coluna * width + 30f32,
-                        linha * heigth + 30f32,
-                        width,
-                        heigth,
-                        BLUE,
-                    );
-                }
-                Players::Player2 => {
-                    draw_rectangle(
-                        coluna * width + 30f32,
-                        linha * heigth + 30f32,
-                        width,
-                        heigth,
-                        GREEN,
-                    );
-                }
-            },
-        }
+        draw_rectangle(
+            coluna * width,
+            linha * heigth,
+            width,
+            heigth,
+            ttt_color_to_macroquad_color(&item.color()),
+        );
         coluna += 1f32;
     }
 }
 
+fn screen_pos_to_cell_pos((x, y): (f32, f32)) -> usize {
+    if !(100f32..=400f32).contains(&x) {
+        return usize::MAX;
+    }
+    if !(100f32..=400f32).contains(&y) {
+        return usize::MAX;
+    }
+    if (100f32..200f32).contains(&y) && (100f32..200f32).contains(&x) {
+        return 0;
+    }
+    if (100f32..200f32).contains(&y) && (200f32..300f32).contains(&x) {
+        return 1;
+    }
+    if (100f32..200f32).contains(&y) && (300f32..400f32).contains(&x) {
+        return 2;
+    }
+    if (200f32..300f32).contains(&y) && (100f32..200f32).contains(&x) {
+        return 3;
+    }
+    if (200f32..300f32).contains(&y) && (200f32..300f32).contains(&x) {
+        return 4;
+    }
+    if (200f32..300f32).contains(&y) && (300f32..400f32).contains(&x) {
+        return 5;
+    }
+    if (300f32..400f32).contains(&y) && (100f32..200f32).contains(&x) {
+        return 6;
+    }
+    if (300f32..400f32).contains(&y) && (200f32..300f32).contains(&x) {
+        return 7;
+    }
+    if (300f32..400f32).contains(&y) && (300f32..400f32).contains(&x) {
+        return 8;
+    }
+    usize::MAX
+}
+
 #[macroquad::main("TicTacToe")]
 async fn main() {
-    use std::io::{stdin, stdout, Write};
+    // use std::io::{stdin, stdout, Write};
     let mut board = Ttt::new();
     // board.show();
     while !is_victory(&board) {
-        print!("Next play: ");
-        let mut s = String::new();
-        let _ = stdout().flush();
-        while s.is_empty() {
-            stdin().read_line(&mut s).expect("Incorrect string");
-            if let Some('\n') = s.chars().next_back() {
-                s.pop();
-            }
-            if let Some('\r') = s.chars().next_back() {
-                s.pop();
-            }
+        if is_mouse_button_pressed(MouseButton::Left) {
+            let cursor_position = mouse_position();
+            let cell_position = screen_pos_to_cell_pos(cursor_position);
+            board.play(cell_position);
         }
-        if !board.play(s.parse::<usize>().unwrap() - 1) {
-            println!("Problem playing it. Nothing happened");
-        }
+        // let cursor_position = mouse_position();
+        // println!("{} - {}", cursor_position.0, cursor_position.1);
+        // print!("Next play: ");
+        // let mut s = String::new();
+        // let _ = stdout().flush();
+        // while s.is_empty() {
+        //     stdin().read_line(&mut s).expect("Incorrect string");
+        //     if let Some('\n') = s.chars().next_back() {
+        //         s.pop();
+        //     }
+        //     if let Some('\r') = s.chars().next_back() {
+        //         s.pop();
+        //     }
+        // }
+        // if !board.play(s.parse::<usize>().unwrap() - 1) {
+        //     println!("Problem playing it. Nothing happened");
+        // }
         draw_game(&board);
         // board.show();
         next_frame().await
