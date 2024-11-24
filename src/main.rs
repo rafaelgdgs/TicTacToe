@@ -1,25 +1,51 @@
+use macroquad::prelude::*;
+
 #[derive(Debug, PartialEq, Clone)]
 enum Players {
     Player1,
     Player2,
 }
 
+impl Players {
+    fn color(&self) -> PlayersColors {
+        match self {
+            Players::Player1 => PlayersColors::Blue,
+            Players::Player2 => PlayersColors::Green,
+        }
+    }
+}
+
+enum PlayersColors {
+    Red,
+    Green,
+    Blue,
+}
+
 #[derive(Debug, PartialEq, Clone)]
-enum CellPlayer {
+enum CellPlayed {
     Yes(Players),
     No,
 }
 
+impl CellPlayed {
+    fn color(&self) -> PlayersColors {
+        match self {
+            CellPlayed::Yes(p) => p.color(),
+            CellPlayed::No => PlayersColors::Red,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 struct Ttt {
-    board: Vec<CellPlayer>,
+    board: Vec<CellPlayed>,
     player: Players,
 }
 
 impl Ttt {
     fn new() -> Self {
         Self {
-            board: vec![CellPlayer::No; 9],
+            board: vec![CellPlayed::No; 9],
             player: Players::Player1,
         }
     }
@@ -28,10 +54,10 @@ impl Ttt {
         if position > 9 {
             return false;
         }
-        if self.board[position] != CellPlayer::No {
+        if self.board[position] != CellPlayed::No {
             return false;
         }
-        self.board[position] = CellPlayer::Yes(self.player.to_owned());
+        self.board[position] = CellPlayed::Yes(self.player.to_owned());
         self.player = match self.player {
             Players::Player1 => Players::Player2,
             Players::Player2 => Players::Player1,
@@ -39,7 +65,10 @@ impl Ttt {
         true
     }
 
-    fn pos(&self, position: usize) -> &CellPlayer {
+    fn pos(&self, position: usize) -> &CellPlayed {
+        if position > 9 {
+            return &CellPlayed::No;
+        }
         &self.board[position]
     }
 
@@ -73,65 +102,72 @@ impl Ttt {
 
 fn pos_to_string(board: &Ttt, pos: usize) -> String {
     match board.pos(pos) {
-        CellPlayer::No => "0".to_string(),
-        CellPlayer::Yes(x) => match x {
+        CellPlayed::No => "0".to_string(),
+        CellPlayed::Yes(x) => match x {
             Players::Player1 => "1".to_string(),
             Players::Player2 => "2".to_string(),
         },
     }
 }
 
-fn winner_player_based_on_current_player(board: &Ttt) -> String {
+fn player_to_string(p: &Players) -> String {
+    match p {
+        Players::Player1 => "1".to_string(),
+        Players::Player2 => "2".to_string(),
+    }
+}
+
+fn winner_player_based_on_current_player(board: &Ttt) -> &Players {
     match board.get_player() {
-        Players::Player1 => "2".to_string(),
-        Players::Player2 => "1".to_string(),
+        Players::Player1 => &Players::Player2,
+        Players::Player2 => &Players::Player1,
     }
 }
 
 fn is_victory(board: &Ttt) -> bool {
-    if board.pos(0) != &CellPlayer::No
+    if board.pos(0) != &CellPlayed::No
         && board.pos(0) == board.pos(1)
         && board.pos(0) == (board.pos(2))
     {
         return true;
     }
-    if board.pos(3) != &CellPlayer::No
+    if board.pos(3) != &CellPlayed::No
         && board.pos(3) == board.pos(4)
         && board.pos(3) == board.pos(5)
     {
         return true;
     }
-    if board.pos(6) != &CellPlayer::No
+    if board.pos(6) != &CellPlayed::No
         && board.pos(6) == board.pos(7)
         && board.pos(6) == board.pos(8)
     {
         return true;
     }
-    if board.pos(0) != &CellPlayer::No
+    if board.pos(0) != &CellPlayed::No
         && board.pos(0) == board.pos(3)
         && board.pos(0) == board.pos(6)
     {
         return true;
     }
-    if board.pos(1) != &CellPlayer::No
+    if board.pos(1) != &CellPlayed::No
         && board.pos(1) == board.pos(4)
         && board.pos(1) == board.pos(7)
     {
         return true;
     }
-    if board.pos(2) != &CellPlayer::No
+    if board.pos(2) != &CellPlayed::No
         && board.pos(2) == board.pos(5)
         && board.pos(2) == board.pos(8)
     {
         return true;
     }
-    if board.pos(0) != &CellPlayer::No
+    if board.pos(0) != &CellPlayed::No
         && board.pos(0) == board.pos(4)
         && board.pos(0) == board.pos(8)
     {
         return true;
     }
-    if board.pos(2) != &CellPlayer::No
+    if board.pos(2) != &CellPlayed::No
         && board.pos(2) == board.pos(4)
         && board.pos(2) == board.pos(6)
     {
@@ -144,10 +180,57 @@ fn is_victory(board: &Ttt) -> bool {
 
 // fn calculate_win(b: Ttt) -> Vec<Ttt> {}
 
-fn main() {
+fn draw_game(game: &Ttt) {
+    let width = 100.0;
+    let heigth = 100.0;
+    clear_background(WHITE);
+    let mut linha = 1f32;
+    let mut coluna = 1f32;
+    for item in &game.board {
+        if coluna >= 4f32 {
+            linha += 1f32;
+            coluna = 1f32;
+        }
+        match item {
+            CellPlayed::No => {
+                draw_rectangle(
+                    coluna * width + 30f32,
+                    linha * heigth + 30f32,
+                    width,
+                    heigth,
+                    RED,
+                );
+            }
+            CellPlayed::Yes(p) => match p {
+                Players::Player1 => {
+                    draw_rectangle(
+                        coluna * width + 30f32,
+                        linha * heigth + 30f32,
+                        width,
+                        heigth,
+                        BLUE,
+                    );
+                }
+                Players::Player2 => {
+                    draw_rectangle(
+                        coluna * width + 30f32,
+                        linha * heigth + 30f32,
+                        width,
+                        heigth,
+                        GREEN,
+                    );
+                }
+            },
+        }
+        coluna += 1f32;
+    }
+}
+
+#[macroquad::main("TicTacToe")]
+async fn main() {
     use std::io::{stdin, stdout, Write};
     let mut board = Ttt::new();
-    board.show();
+    // board.show();
     while !is_victory(&board) {
         print!("Next play: ");
         let mut s = String::new();
@@ -164,11 +247,12 @@ fn main() {
         if !board.play(s.parse::<usize>().unwrap() - 1) {
             println!("Problem playing it. Nothing happened");
         }
-        //println!("{:?}", board);
-        board.show();
+        draw_game(&board);
+        // board.show();
+        next_frame().await
     }
     println!(
         "Player {} won!",
-        winner_player_based_on_current_player(&board)
+        player_to_string(winner_player_based_on_current_player(&board))
     );
 }
