@@ -7,15 +7,15 @@ enum Players {
 }
 
 impl Players {
-    fn color(&self) -> PlayersColors {
+    fn color(&self) -> CellColors {
         match self {
-            Players::Player1 => PlayersColors::Blue,
-            Players::Player2 => PlayersColors::Green,
+            Players::Player1 => CellColors::Blue,
+            Players::Player2 => CellColors::Green,
         }
     }
 }
 
-enum PlayersColors {
+enum CellColors {
     Red,
     Green,
     Blue,
@@ -28,10 +28,10 @@ enum CellPlayed {
 }
 
 impl CellPlayed {
-    fn color(&self) -> PlayersColors {
+    fn color(&self) -> CellColors {
         match self {
             CellPlayed::Yes(p) => p.color(),
-            CellPlayed::No => PlayersColors::Red,
+            CellPlayed::No => CellColors::Red,
         }
     }
 }
