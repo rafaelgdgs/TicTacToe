@@ -247,37 +247,43 @@ fn screen_pos_to_cell_pos((x, y): (f32, f32)) -> usize {
     usize::MAX
 }
 
+fn play_on_stdin(board: &mut Ttt) {
+    use std::io::{stdin, stdout, Write};
+    board.show();
+    print!("Next play: ");
+    let mut s = String::new();
+    let _ = stdout().flush();
+    while s.is_empty() {
+        stdin().read_line(&mut s).expect("Incorrect string");
+        if let Some('\n') = s.chars().next_back() {
+            s.pop();
+        }
+        if let Some('\r') = s.chars().next_back() {
+            s.pop();
+        }
+    }
+    if !board.play(s.parse::<usize>().unwrap() - 1) {
+        println!("Problem playing it. Nothing happened");
+    }
+}
+
 #[macroquad::main("TicTacToe")]
 async fn main() {
-    // use std::io::{stdin, stdout, Write};
     let mut board = Ttt::new();
-    // board.show();
+    let stdin_play = false;
+
     while !is_victory(&board) {
-        if is_mouse_button_pressed(MouseButton::Left) {
-            let cursor_position = mouse_position();
-            let cell_position = screen_pos_to_cell_pos(cursor_position);
-            board.play(cell_position);
+        if stdin_play {
+            play_on_stdin(&mut board);
+        } else {
+            if is_mouse_button_pressed(MouseButton::Left) {
+                let cursor_position = mouse_position();
+                let cell_position = screen_pos_to_cell_pos(cursor_position);
+                board.play(cell_position);
+            }
+            draw_game(&board);
+            next_frame().await
         }
-        // let cursor_position = mouse_position();
-        // println!("{} - {}", cursor_position.0, cursor_position.1);
-        // print!("Next play: ");
-        // let mut s = String::new();
-        // let _ = stdout().flush();
-        // while s.is_empty() {
-        //     stdin().read_line(&mut s).expect("Incorrect string");
-        //     if let Some('\n') = s.chars().next_back() {
-        //         s.pop();
-        //     }
-        //     if let Some('\r') = s.chars().next_back() {
-        //         s.pop();
-        //     }
-        // }
-        // if !board.play(s.parse::<usize>().unwrap() - 1) {
-        //     println!("Problem playing it. Nothing happened");
-        // }
-        draw_game(&board);
-        // board.show();
-        next_frame().await
     }
     println!(
         "Player {} won!",
