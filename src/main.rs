@@ -111,6 +111,9 @@ impl Ttt {
         match bcell {
             None => false,
             Some(x) => {
+                if x.is_played != CellPlayed::No {
+                    return true;
+                }
                 x.is_played = CellPlayed::Yes(player);
                 x.color = ttt_color_to_macroquad_color(color);
                 self.player = match self.player {
@@ -250,6 +253,7 @@ fn draw_game(game: &Ttt) {
     for item in &game.board {
         draw_rectangle(item.x, item.y, item.size, item.size, item.color);
     }
+    draw_text("RESTART", 500f32, 500f32, 70f32, BLACK);
 }
 
 fn on_top_of_cell((x, y): (f32, f32), cell: &Cell) -> bool {
@@ -296,34 +300,70 @@ async fn main() {
     let mut board = Ttt::new();
     let stdin_play = false;
 
-    while !is_victory(&board) {
-        if stdin_play {
-            play_on_stdin(&mut board);
-        } else {
-            if is_mouse_button_pressed(MouseButton::Left) {
-                let cursor_position = mouse_position();
-                let cell_position = screen_pos_to_cell(cursor_position, &board);
-                board.play_cell(cell_position.unwrap());
-            }
-            if is_mouse_button_down(MouseButton::Right) {
-                let cursor_position = mouse_position();
-                let cell = screen_pos_to_cell(cursor_position, &board);
-                match cell {
-                    None => {}
-                    Some(cell) => {
-                        let board_cell = board.find_cell(&cell).unwrap();
-
-                        board_cell.x = cursor_position.0 - cell.size / 2f32;
-                        board_cell.y = cursor_position.1 - cell.size / 2f32;
+    loop {
+        while !is_victory(&board) {
+            if stdin_play {
+                play_on_stdin(&mut board);
+            } else {
+                if is_mouse_button_pressed(MouseButton::Left) {
+                    let cursor_position = mouse_position();
+                    if (500f32..700f32).contains(&cursor_position.0)
+                        && (450f32..500f32).contains(&cursor_position.1)
+                    {
+                        board = Ttt::new();
+                    }
+                    let cell_position = screen_pos_to_cell(cursor_position, &board);
+                    match cell_position {
+                        None => {}
+                        Some(c) => {
+                            board.play_cell(c);
+                        }
                     }
                 }
+                if is_mouse_button_down(MouseButton::Right) {
+                    let cursor_position = mouse_position();
+                    let cell = screen_pos_to_cell(cursor_position, &board);
+                    match cell {
+                        None => {}
+                        Some(cell) => match board.find_cell(&cell) {
+                            None => {}
+                            Some(c) => {
+                                c.x = cursor_position.0 - cell.size / 2f32;
+                                c.y = cursor_position.1 - cell.size / 2f32;
+                            }
+                        },
+                    }
+                }
+                draw_game(&board);
+                next_frame().await
             }
+        }
+        loop {
             draw_game(&board);
+            draw_text(
+                format!(
+                    "Player {} won!",
+                    player_to_string(winner_player_based_on_current_player(&board))
+                )
+                .as_str(),
+                50f32,
+                50f32,
+                50f32,
+                BLACK,
+            );
+            let mousepos = mouse_position();
+            if (500f32..700f32).contains(&mousepos.0)
+                && (450f32..500f32).contains(&mousepos.1)
+                && is_mouse_button_pressed(MouseButton::Left)
+            {
+                board = Ttt::new();
+                break;
+            }
             next_frame().await
         }
+        println!(
+            "Player {} won!",
+            player_to_string(winner_player_based_on_current_player(&board))
+        );
     }
-    println!(
-        "Player {} won!",
-        player_to_string(winner_player_based_on_current_player(&board))
-    );
 }
