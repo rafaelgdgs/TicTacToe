@@ -99,14 +99,25 @@ impl Ttt {
         true
     }
 
-    fn play_cell(&mut self, cell: &Cell) {
+    fn find_cell(&mut self, cell: &Cell) -> Option<&mut Cell> {
         let mut into_iter = self.board.iter_mut();
-        let mut cell = into_iter.find(|mut x| *x == cell);
-        match cell {
-            None => {}
+        into_iter.find(|x| *x == cell)
+    }
+
+    fn play_cell(&mut self, cell: Cell) -> bool {
+        let player = self.player.to_owned();
+        let color = player.color();
+        let bcell = self.find_cell(&cell);
+        match bcell {
+            None => false,
             Some(x) => {
-                x.is_played = CellPlayed::Yes(self.player.to_owned());
-                x.color = ttt_color_to_macroquad_color(self.player.color());
+                x.is_played = CellPlayed::Yes(player);
+                x.color = ttt_color_to_macroquad_color(color);
+                self.player = match self.player {
+                    Players::Player1 => Players::Player2,
+                    Players::Player2 => Players::Player1,
+                };
+                true
             }
         }
     }
@@ -267,10 +278,10 @@ fn on_top_of_cell((x, y): (f32, f32), cell: &Cell) -> bool {
     true
 }
 
-fn screen_pos_to_cell((x, y): (f32, f32), board: &Ttt) -> Option<&Cell> {
+fn screen_pos_to_cell((x, y): (f32, f32), board: &Ttt) -> Option<Cell> {
     for item in &board.board {
-        if on_top_of_cell((x, y), &item) {
-            return Some(item);
+        if on_top_of_cell((x, y), item) {
+            return Some(item.clone());
         }
     }
     None
@@ -344,17 +355,19 @@ async fn main() {
         } else {
             if is_mouse_button_pressed(MouseButton::Left) {
                 let cursor_position = mouse_position();
-                let cell_position = screen_pos_to_cell(cursor_position, &mut board);
+                let cell_position = screen_pos_to_cell(cursor_position, &board);
                 board.play_cell(cell_position.unwrap());
             }
             if is_mouse_button_down(MouseButton::Right) {
                 let cursor_position = mouse_position();
-                let cell = screen_pos_to_cell(cursor_position, &mut board);
+                let cell = screen_pos_to_cell(cursor_position, &board);
                 match cell {
                     None => {}
                     Some(cell) => {
-                        cell.x = cursor_position.0 - cell.size / 2f32;
-                        cell.y = cursor_position.1 - cell.size / 2f32;
+                        let board_cell = board.find_cell(&cell).unwrap();
+
+                        board_cell.x = cursor_position.0 - cell.size / 2f32;
+                        board_cell.y = cursor_position.1 - cell.size / 2f32;
                         // let mouse_diff = mouse_delta_position();
                         // println!("{:?}", mouse_diff);
                         // cell.x += mouse_diff.x;
