@@ -99,6 +99,18 @@ impl Ttt {
         true
     }
 
+    fn play_cell(&mut self, cell: &Cell) {
+        let mut into_iter = self.board.iter_mut();
+        let mut cell = into_iter.find(|mut x| *x == cell);
+        match cell {
+            None => {}
+            Some(x) => {
+                x.is_played = CellPlayed::Yes(self.player.to_owned());
+                x.color = ttt_color_to_macroquad_color(self.player.color());
+            }
+        }
+    }
+
     fn pos(&self, position: usize) -> &CellPlayed {
         if position > 8 {
             return &CellPlayed::No;
@@ -255,9 +267,9 @@ fn on_top_of_cell((x, y): (f32, f32), cell: &Cell) -> bool {
     true
 }
 
-fn screen_pos_to_cell((x, y): (f32, f32), board: &mut Ttt) -> Option<&mut Cell> {
-    for item in &mut board.board {
-        if on_top_of_cell((x, y), item) {
+fn screen_pos_to_cell((x, y): (f32, f32), board: &Ttt) -> Option<&Cell> {
+    for item in &board.board {
+        if on_top_of_cell((x, y), &item) {
             return Some(item);
         }
     }
@@ -332,19 +344,21 @@ async fn main() {
         } else {
             if is_mouse_button_pressed(MouseButton::Left) {
                 let cursor_position = mouse_position();
-                let cell_position = screen_pos_to_cell_pos(cursor_position);
-                board.play(cell_position);
+                let cell_position = screen_pos_to_cell(cursor_position, &mut board);
+                board.play_cell(cell_position.unwrap());
             }
             if is_mouse_button_down(MouseButton::Right) {
                 let cursor_position = mouse_position();
-                let cell_position = screen_pos_to_cell(cursor_position, &mut board);
-                match cell_position {
+                let cell = screen_pos_to_cell(cursor_position, &mut board);
+                match cell {
                     None => {}
                     Some(cell) => {
-                        let mouse_diff = mouse_delta_position();
-                        println!("{:?}", mouse_diff);
-                        cell.x += mouse_diff.x;
-                        cell.y += mouse_diff.y;
+                        cell.x = cursor_position.0 - cell.size / 2f32;
+                        cell.y = cursor_position.1 - cell.size / 2f32;
+                        // let mouse_diff = mouse_delta_position();
+                        // println!("{:?}", mouse_diff);
+                        // cell.x += mouse_diff.x;
+                        // cell.y += mouse_diff.y;
                     }
                 }
             }
