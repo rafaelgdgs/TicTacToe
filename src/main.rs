@@ -15,8 +15,9 @@ impl Players {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
 enum CellColors {
-    Red,
+    Purple,
     Green,
     Blue,
 }
@@ -31,21 +32,52 @@ impl CellPlayed {
     fn color(&self) -> CellColors {
         match self {
             CellPlayed::Yes(p) => p.color(),
-            CellPlayed::No => CellColors::Red,
+            CellPlayed::No => CellColors::Purple,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct Cell {
+    is_played: CellPlayed,
+    color: macroquad::color::Color,
+    x: f32,
+    y: f32,
+    size: f32,
+}
+
+impl Cell {
+    fn new(x: f32, y: f32) -> Self {
+        Self {
+            is_played: CellPlayed::No,
+            color: ttt_color_to_macroquad_color(CellPlayed::No.color()),
+            x,
+            y,
+            size: 100f32,
         }
     }
 }
 
 #[derive(Debug, PartialEq)]
 struct Ttt {
-    board: Vec<CellPlayed>,
+    board: Vec<Cell>,
     player: Players,
 }
 
 impl Ttt {
     fn new() -> Self {
         Self {
-            board: vec![CellPlayed::No; 9],
+            board: vec![
+                Cell::new(100f32, 100f32),
+                Cell::new(200f32, 100f32),
+                Cell::new(300f32, 100f32),
+                Cell::new(100f32, 200f32),
+                Cell::new(200f32, 200f32),
+                Cell::new(300f32, 200f32),
+                Cell::new(100f32, 300f32),
+                Cell::new(200f32, 300f32),
+                Cell::new(300f32, 300f32),
+            ],
             player: Players::Player1,
         }
     }
@@ -54,10 +86,12 @@ impl Ttt {
         if position > 8 {
             return false;
         }
-        if self.board[position] != CellPlayed::No {
+        if self.board[position].is_played != CellPlayed::No {
             return false;
         }
-        self.board[position] = CellPlayed::Yes(self.player.to_owned());
+        self.board[position].is_played = CellPlayed::Yes(self.player.to_owned());
+        self.board[position].color =
+            ttt_color_to_macroquad_color(self.board[position].is_played.color());
         self.player = match self.player {
             Players::Player1 => Players::Player2,
             Players::Player2 => Players::Player1,
@@ -69,7 +103,7 @@ impl Ttt {
         if position > 8 {
             return &CellPlayed::No;
         }
-        &self.board[position]
+        &self.board[position].is_played
     }
 
     fn show(&self) {
@@ -180,34 +214,54 @@ fn is_victory(board: &Ttt) -> bool {
 
 // fn calculate_win(b: Ttt) -> Vec<Ttt> {}
 
-fn ttt_color_to_macroquad_color(cc: &CellColors) -> macroquad::color::Color {
+fn ttt_color_to_macroquad_color(cc: CellColors) -> macroquad::color::Color {
     match cc {
-        CellColors::Red => RED,
+        CellColors::Purple => PURPLE,
         CellColors::Blue => BLUE,
         CellColors::Green => GREEN,
     }
 }
 
 fn draw_game(game: &Ttt) {
-    let width = 100.0;
-    let heigth = 100.0;
     clear_background(WHITE);
-    let mut linha = 1f32;
-    let mut coluna = 1f32;
     for item in &game.board {
-        if coluna >= 4f32 {
-            linha += 1f32;
-            coluna = 1f32;
-        }
-        draw_rectangle(
-            coluna * width,
-            linha * heigth,
-            width,
-            heigth,
-            ttt_color_to_macroquad_color(&item.color()),
-        );
-        coluna += 1f32;
+        draw_rectangle(item.x, item.y, item.size, item.size, item.color);
     }
+}
+
+// fn draw_game(game: &Ttt) {
+//     let width = 100.0;
+//     let heigth = 100.0;
+//     clear_background(WHITE);
+//     let mut linha = 1f32;
+//     let mut coluna = 1f32;
+//     for item in &game.board {
+//         if coluna >= 4f32 {
+//             linha += 1f32;
+//             coluna = 1f32;
+//         }
+//         draw_rectangle(coluna * width, linha * heigth, width, heigth, item.color);
+//         coluna += 1f32;
+//     }
+// }
+
+fn on_top_of_cell((x, y): (f32, f32), cell: &Cell) -> bool {
+    if x < cell.x || x > cell.x + cell.size {
+        return false;
+    }
+    if y < cell.y || y > cell.y + cell.size {
+        return false;
+    }
+    true
+}
+
+fn screen_pos_to_cell((x, y): (f32, f32), board: &mut Ttt) -> Option<&mut Cell> {
+    for item in &mut board.board {
+        if on_top_of_cell((x, y), item) {
+            return Some(item);
+        }
+    }
+    None
 }
 
 fn screen_pos_to_cell_pos((x, y): (f32, f32)) -> usize {
@@ -280,6 +334,19 @@ async fn main() {
                 let cursor_position = mouse_position();
                 let cell_position = screen_pos_to_cell_pos(cursor_position);
                 board.play(cell_position);
+            }
+            if is_mouse_button_down(MouseButton::Right) {
+                let cursor_position = mouse_position();
+                let cell_position = screen_pos_to_cell(cursor_position, &mut board);
+                match cell_position {
+                    None => {}
+                    Some(cell) => {
+                        let mouse_diff = mouse_delta_position();
+                        println!("{:?}", mouse_diff);
+                        cell.x += mouse_diff.x;
+                        cell.y += mouse_diff.y;
+                    }
+                }
             }
             draw_game(&board);
             next_frame().await
