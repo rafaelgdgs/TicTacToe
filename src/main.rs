@@ -252,22 +252,6 @@ fn draw_game(game: &Ttt) {
     }
 }
 
-// fn draw_game(game: &Ttt) {
-//     let width = 100.0;
-//     let heigth = 100.0;
-//     clear_background(WHITE);
-//     let mut linha = 1f32;
-//     let mut coluna = 1f32;
-//     for item in &game.board {
-//         if coluna >= 4f32 {
-//             linha += 1f32;
-//             coluna = 1f32;
-//         }
-//         draw_rectangle(coluna * width, linha * heigth, width, heigth, item.color);
-//         coluna += 1f32;
-//     }
-// }
-
 fn on_top_of_cell((x, y): (f32, f32), cell: &Cell) -> bool {
     if x < cell.x || x > cell.x + cell.size {
         return false;
@@ -285,43 +269,6 @@ fn screen_pos_to_cell((x, y): (f32, f32), board: &Ttt) -> Option<Cell> {
         }
     }
     None
-}
-
-fn screen_pos_to_cell_pos((x, y): (f32, f32)) -> usize {
-    if !(100f32..=400f32).contains(&x) {
-        return usize::MAX;
-    }
-    if !(100f32..=400f32).contains(&y) {
-        return usize::MAX;
-    }
-    if (100f32..200f32).contains(&y) && (100f32..200f32).contains(&x) {
-        return 0;
-    }
-    if (100f32..200f32).contains(&y) && (200f32..300f32).contains(&x) {
-        return 1;
-    }
-    if (100f32..200f32).contains(&y) && (300f32..400f32).contains(&x) {
-        return 2;
-    }
-    if (200f32..300f32).contains(&y) && (100f32..200f32).contains(&x) {
-        return 3;
-    }
-    if (200f32..300f32).contains(&y) && (200f32..300f32).contains(&x) {
-        return 4;
-    }
-    if (200f32..300f32).contains(&y) && (300f32..400f32).contains(&x) {
-        return 5;
-    }
-    if (300f32..400f32).contains(&y) && (100f32..200f32).contains(&x) {
-        return 6;
-    }
-    if (300f32..400f32).contains(&y) && (200f32..300f32).contains(&x) {
-        return 7;
-    }
-    if (300f32..400f32).contains(&y) && (300f32..400f32).contains(&x) {
-        return 8;
-    }
-    usize::MAX
 }
 
 fn play_on_stdin(board: &mut Ttt) {
@@ -368,10 +315,6 @@ async fn main() {
 
                         board_cell.x = cursor_position.0 - cell.size / 2f32;
                         board_cell.y = cursor_position.1 - cell.size / 2f32;
-                        // let mouse_diff = mouse_delta_position();
-                        // println!("{:?}", mouse_diff);
-                        // cell.x += mouse_diff.x;
-                        // cell.y += mouse_diff.y;
                     }
                 }
             }
