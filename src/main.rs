@@ -185,56 +185,29 @@ fn winner_player_based_on_current_player(board: &Ttt) -> &Players {
 }
 
 fn is_victory(board: &Ttt) -> bool {
-    if board.pos(0) != &CellPlayed::No
-        && board.pos(0) == board.pos(1)
-        && board.pos(0) == (board.pos(2))
-    {
-        return true;
-    }
-    if board.pos(3) != &CellPlayed::No
-        && board.pos(3) == board.pos(4)
-        && board.pos(3) == board.pos(5)
-    {
-        return true;
-    }
-    if board.pos(6) != &CellPlayed::No
-        && board.pos(6) == board.pos(7)
-        && board.pos(6) == board.pos(8)
-    {
-        return true;
-    }
-    if board.pos(0) != &CellPlayed::No
-        && board.pos(0) == board.pos(3)
-        && board.pos(0) == board.pos(6)
-    {
-        return true;
-    }
-    if board.pos(1) != &CellPlayed::No
-        && board.pos(1) == board.pos(4)
-        && board.pos(1) == board.pos(7)
-    {
-        return true;
-    }
-    if board.pos(2) != &CellPlayed::No
-        && board.pos(2) == board.pos(5)
-        && board.pos(2) == board.pos(8)
-    {
-        return true;
-    }
-    if board.pos(0) != &CellPlayed::No
-        && board.pos(0) == board.pos(4)
-        && board.pos(0) == board.pos(8)
-    {
-        return true;
-    }
-    if board.pos(2) != &CellPlayed::No
-        && board.pos(2) == board.pos(4)
-        && board.pos(2) == board.pos(6)
-    {
-        return true;
+    // Todas as combinações vencedoras possíveis
+    let winning_combinations = [
+        [0, 1, 2], // Linhas
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6], // Colunas
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8], // Diagonais
+        [2, 4, 6],
+    ];
+
+    for &combo in &winning_combinations {
+        if board.pos(combo[0]) != &CellPlayed::No
+            && board.pos(combo[0]) == board.pos(combo[1])
+            && board.pos(combo[0]) == board.pos(combo[2])
+        {
+            return true;
+        }
     }
     false
 }
+
 
 // impl<'a, 'b> PartialEq<
 
